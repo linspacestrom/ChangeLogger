@@ -3,12 +3,16 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/linspacestrom/ChangeLogger/internal/config"
 	"github.com/linspacestrom/ChangeLogger/internal/db"
+	"github.com/linspacestrom/ChangeLogger/internal/handlers"
+	"github.com/linspacestrom/ChangeLogger/internal/repositories"
+	"github.com/linspacestrom/ChangeLogger/internal/services"
 )
 
 func main() {
@@ -42,6 +46,22 @@ func main() {
 	}
 	log.Println("Connection to the database is established")
 
+	repo := repositories.NewPoolProjectRepository(pgxPool)
+	svc := services.NewProjectService(repo)
+	hs := handlers.NewRoutes(svc)
+
+	srv := &http.Server{
+		Addr:    ":" + cfg.ServerPort,
+		Handler: hs.Handler(),
+	}
+
+	go func() {
+		log.Printf("HTTP server listening on :%s", cfg.ServerPort)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("HTTP server error: %s", err)
+		}
+	}()
+
 	// обработчик сигналов
 	select {
 	case <-ctx.Done(): // завершаем работу по контексту
@@ -50,6 +70,8 @@ func main() {
 		log.Printf("\nRecieved signal %s, shutting down", val)
 		cancel()
 	}
+
+	_ = srv.Close()
 
 	log.Println("ChangeLogger stopped")
 }
