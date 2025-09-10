@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	ServerPort string
-	DbConfig
+	DbConfig   DbConfig
 }
 
 type DbConfig struct {
