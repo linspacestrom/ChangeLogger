@@ -1,10 +1,11 @@
 package db
 
 import (
-	"ChangeLogger/internal/config"
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/linspacestrom/ChangeLogger/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

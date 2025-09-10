@@ -1,4 +1,4 @@
-module ChangeLogger
+module github.com/linspacestrom/ChangeLogger
 
 go 1.24.6
 

@@ -1,13 +1,14 @@
 package main
 
 import (
-	"ChangeLogger/internal/config"
-	"ChangeLogger/internal/db"
 	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/linspacestrom/ChangeLogger/internal/config"
+	"github.com/linspacestrom/ChangeLogger/internal/db"
 )
 
 func main() {
