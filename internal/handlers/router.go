@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -33,8 +34,10 @@ func (s *Server) RegisterRoutes() {
 		c.Next()
 	})
 
-	s.engine.POST("/projects", s.createProject)
 	s.engine.GET("/projects", s.listProjects)
+	s.engine.GET("/projects/:id", s.getProject)
+	s.engine.POST("/projects", s.createProject)
+	s.engine.DELETE("/projects/:id", s.deleteProject)
 }
 
 func (s *Server) Handler() http.Handler { return s.engine }
@@ -51,9 +54,30 @@ func (s *Server) listProjects(c *gin.Context) {
 	projects, err := s.svc.ListProjects(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, projects)
+}
+
+// getProject godoc
+// @Summary 	Get project by ID
+// @Description Return project by ID
+// @Tags 		projects
+// Produce 		json
+// @Param 		id   path	string true "Project ID"
+// @Success 	200 {object}  domain.Project
+// @Failure 	404 {object}  map[string]string
+// @Router 		/projects/{id}  [get]
+func (s *Server) getProject(c *gin.Context) {
+	id := c.Param("id")
+	project, err := s.svc.GetProject(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Project with id %s not found", id)})
+		return
+	}
+
+	c.JSON(http.StatusOK, project)
 }
 
 // createProject godoc
@@ -72,11 +96,32 @@ func (s *Server) createProject(c *gin.Context) {
 
 	if err := c.ShouldBindBodyWithJSON(&reqData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	project, err := s.svc.CreateProject(c.Request.Context(), reqData)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusCreated, project)
+}
+
+// deleteProject godoc
+// @Summary      Delete project
+// @Description  Delete project by id
+// @Tags         projects
+// @Param 		 id   path	string true "Project ID"
+// @Success      204  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /projects [delete]
+func (s *Server) deleteProject(c *gin.Context) {
+	id := c.Param("id")
+	err := s.svc.DeleteProject(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Project with id %s not found", id)})
+		return
+	}
+	c.JSON(http.StatusNoContent, gin.H{"message": fmt.Sprintf("Project with id %s succsses deleted", id)})
+
 }
