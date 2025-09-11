@@ -25,10 +25,26 @@ func (s *ProjectService) CreateProject(ctx context.Context, projectCreate domain
 
 }
 
+func (s *ProjectService) GetProject(ctx context.Context, id string) (domain.ProjectDetail, error) {
+	project, err := s.repo.GetById(ctx, id)
+	if err != nil {
+		log.Printf("[ProjectService] failed get project: %v\n", err)
+	}
+	return project, err
+}
+
 func (s *ProjectService) ListProjects(ctx context.Context) ([]domain.Project, error) {
 	projects, err := s.repo.GetAll(ctx)
 	if err != nil {
 		log.Printf("[ProjectService] failed to list projects: %v\n", err)
 	}
 	return projects, err
+}
+
+func (s *ProjectService) DeleteProject(ctx context.Context, id string) error {
+	err := s.repo.Delete(ctx, id)
+	if err != nil {
+		log.Printf("[ProjectService] failed to delete project: %v\n", err)
+	}
+	return err
 }
