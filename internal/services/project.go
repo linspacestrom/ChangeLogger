@@ -16,15 +16,6 @@ func NewProjectService(repo repositories.ProjectRepository) *ProjectService {
 	return &ProjectService{repo: repo}
 }
 
-func (s *ProjectService) CreateProject(ctx context.Context, projectCreate domain.ProjectCreateOrUpdate) (domain.Project, error) {
-	project, err := s.repo.Create(ctx, projectCreate)
-	if err != nil {
-		log.Printf("ProjectService failed: %s", err)
-	}
-	return project, err
-
-}
-
 func (s *ProjectService) GetProject(ctx context.Context, id string) (domain.ProjectDetail, error) {
 	project, err := s.repo.GetById(ctx, id)
 	if err != nil {
@@ -39,6 +30,23 @@ func (s *ProjectService) ListProjects(ctx context.Context) ([]domain.Project, er
 		log.Printf("[ProjectService] failed to list projects: %v\n", err)
 	}
 	return projects, err
+}
+
+func (s *ProjectService) CreateProject(ctx context.Context, projectCreate domain.ProjectCreateOrUpdate) (domain.Project, error) {
+	project, err := s.repo.Create(ctx, projectCreate)
+	if err != nil {
+		log.Printf("ProjectService failed: %s", err)
+	}
+	return project, err
+
+}
+
+func (s *ProjectService) UpdateProject(ctx context.Context, id string, projectUpdate domain.ProjectCreateOrUpdate) (domain.Project, error) {
+	projectUpdated, err := s.repo.Update(ctx, id, projectUpdate)
+	if err != nil {
+		log.Printf("ProjectService: %s", err)
+	}
+	return projectUpdated, err
 }
 
 func (s *ProjectService) DeleteProject(ctx context.Context, id string) error {

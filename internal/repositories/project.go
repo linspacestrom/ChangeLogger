@@ -8,11 +8,11 @@ import (
 )
 
 type ProjectRepository interface {
-	Create(ctx context.Context, projectCreate domain.ProjectCreateOrUpdate) (domain.Project, error)
 	GetAll(ctx context.Context) ([]domain.Project, error)
 	GetById(ctx context.Context, id string) (domain.ProjectDetail, error)
+	Create(ctx context.Context, projectCreate domain.ProjectCreateOrUpdate) (domain.Project, error)
+	Update(ctx context.Context, id string, projectUpdate domain.ProjectCreateOrUpdate) (domain.Project, error)
 	Delete(ctx context.Context, id string) error
-	//Update(ctx context.Context, uuid string, projectUpdate domain.ProjectCreateOrUpdate) (domain.Project, error)
 }
 
 type PoolProjectRepository struct {
@@ -50,6 +50,18 @@ func (r *PoolProjectRepository) GetAll(ctx context.Context) ([]domain.Project, e
 	return projects, nil
 }
 
+func (r *PoolProjectRepository) GetById(ctx context.Context, id string) (domain.ProjectDetail, error) {
+	var project domain.ProjectDetail
+
+	row := r.pool.QueryRow(ctx, `SELECT * FROM projects WHERE projects.id = $1`, id)
+
+	if err := row.Scan(&project.Id, &project.Title); err != nil {
+		return domain.ProjectDetail{}, err
+	}
+
+	return project, nil
+}
+
 func (r *PoolProjectRepository) Create(ctx context.Context, createProject domain.ProjectCreateOrUpdate) (domain.Project, error) {
 	var project domain.Project
 
@@ -63,13 +75,18 @@ func (r *PoolProjectRepository) Create(ctx context.Context, createProject domain
 
 }
 
-func (r *PoolProjectRepository) GetById(ctx context.Context, id string) (domain.ProjectDetail, error) {
-	var project domain.ProjectDetail
+func (r *PoolProjectRepository) Update(ctx context.Context, id string, updateProject domain.ProjectCreateOrUpdate) (domain.Project, error) {
+	var project domain.Project
 
-	row := r.pool.QueryRow(ctx, `SELECT * FROM projects WHERE projects.id = $1`, id)
+	row := r.pool.QueryRow(ctx, `
+		UPDATE projects
+		SET name = $1
+		WHERE id = $2
+		RETURNING id, name
+	`, updateProject.Title, id)
 
 	if err := row.Scan(&project.Id, &project.Title); err != nil {
-		return domain.ProjectDetail{}, err
+		return project, err
 	}
 
 	return project, nil

@@ -37,6 +37,7 @@ func (s *Server) RegisterRoutes() {
 	s.engine.GET("/projects", s.listProjects)
 	s.engine.GET("/projects/:id", s.getProject)
 	s.engine.POST("/projects", s.createProject)
+	s.engine.PATCH("/projects/:id", s.updateProject)
 	s.engine.DELETE("/projects/:id", s.deleteProject)
 }
 
@@ -105,6 +106,36 @@ func (s *Server) createProject(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, project)
+}
+
+// updateProject godoc
+// @Summary      Update project
+// @Description  Update project with given title
+// @Tags         projects
+// @Accept       json
+// @Produce      json
+// @Param        id       path      string                       true  "Project ID"
+// @Param        project  body      domain.ProjectCreateOrUpdate true  "Project data"
+// @Success      200  {object}  domain.Project
+// @Failure      400  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /projects/{id} [patch]
+func (s *Server) updateProject(c *gin.Context) {
+	id := c.Param("id")
+
+	var reqData domain.ProjectCreateOrUpdate
+
+	if err := c.ShouldBindBodyWithJSON(&reqData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	project, err := s.svc.UpdateProject(c.Request.Context(), id, reqData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, project)
 }
 
 // deleteProject godoc
